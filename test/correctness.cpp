@@ -22,6 +22,8 @@ TEST_CASE("decimal std::int32_t") {
 	CHECK_THROWS_AS(sti::str_to<std::int32_t>("-"), sti::invalid_input_failure);
 	CHECK_THROWS_AS(sti::str_to<std::int32_t>("23x"), sti::invalid_input_failure);
 	CHECK_THROWS_AS(sti::str_to<std::int32_t>("y"), sti::invalid_input_failure);
+	CHECK_THROWS_AS(sti::str_to<std::int32_t>("a"), sti::invalid_input_failure);
+	CHECK_THROWS_AS(sti::str_to<std::int32_t>("A"), sti::invalid_input_failure);
 
 	CHECK_THROWS_AS(sti::str_to<std::int32_t>("-2147483649"), sti::out_of_bounds_failure);
 	CHECK_THROWS_AS(sti::str_to<std::int32_t>("-2147483658"), sti::out_of_bounds_failure);
@@ -86,6 +88,7 @@ TEST_CASE("hexadecimal std::int32_t") {
 	CHECK_THROWS_AS((sti::str_to<std::int32_t, 16>("+")), sti::invalid_input_failure);
 	CHECK_THROWS_AS((sti::str_to<std::int32_t, 16>("-")), sti::invalid_input_failure);
 	CHECK_THROWS_AS((sti::str_to<std::int32_t, 16>("23x")), sti::invalid_input_failure);
+	CHECK_THROWS_AS((sti::str_to<std::int32_t, 16>("g")), sti::invalid_input_failure);
 	CHECK_THROWS_AS((sti::str_to<std::int32_t, 16>("y")), sti::invalid_input_failure);
 
 	CHECK_THROWS_AS((sti::str_to<std::int32_t, 16>("-80000001")), sti::out_of_bounds_failure);
@@ -107,6 +110,7 @@ TEST_CASE("hexadecimal std::uint32_t") {
 	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>("")), sti::invalid_input_failure);
 	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>("+")), sti::invalid_input_failure);
 	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>("23x")), sti::invalid_input_failure);
+	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>("g")), sti::invalid_input_failure);
 	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>("y")), sti::invalid_input_failure);
 	CHECK_THROWS((sti::str_to<std::uint32_t, 16>("-"))); // fails with out of bounds instead of
 	                                               // sti::invalid_input_failure); is this
@@ -117,10 +121,23 @@ TEST_CASE("hexadecimal std::uint32_t") {
 
 	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>("-1")), sti::out_of_bounds_failure);
 	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>("-42")), sti::out_of_bounds_failure);
-	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>("-0xffffffff")), sti::out_of_bounds_failure);
+	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>("-ffffffff")), sti::out_of_bounds_failure);
 
 	const auto bad_str = std::string{'2', '\0', '3'};
 	CHECK_THROWS_AS((sti::str_to<std::uint32_t, 16>(bad_str)), sti::invalid_input_failure);
+}
+
+TEST_CASE("binary std::int8_t") {
+	CHECK((sti::str_to<std::int8_t, 2>("01")) == 1);
+	CHECK((sti::str_to<std::int8_t, 2>("10")) == 2);
+	CHECK((sti::str_to<std::int8_t, 2>("11")) == 3);
+	CHECK((sti::str_to<std::int8_t, 2>("1111")) == 15);
+	CHECK((sti::str_to<std::int8_t, 2>("-01")) == -1);
+	CHECK((sti::str_to<std::int8_t, 2>("-10")) == -2);
+	CHECK((sti::str_to<std::int8_t, 2>("-11")) == -3);
+	CHECK((sti::str_to<std::int8_t, 2>("-1111")) == -15);
+	CHECK_THROWS_AS((sti::str_to<std::int8_t, 2>("2")), sti::invalid_input_failure);
+	CHECK_THROWS_AS((sti::str_to<std::int8_t, 2>("10000000")), sti::out_of_bounds_failure);
 }
 
 TEST_CASE("wchar_t misc") {
