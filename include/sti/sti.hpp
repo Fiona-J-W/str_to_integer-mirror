@@ -75,8 +75,9 @@ Integer to_digit(Char c, std::false_type) {
 	if (cA <= c and c <= cM) {
 		return static_cast<Integer>(c - cA + 10);
 	}
-	throw invalid_input_failure{std::string{"bad digit: "} + c + ", base = " +
-	                                std::to_string(Base)};
+	throw invalid_input_failure{std::string{"bad digit: "} +
+	                            std::to_string(static_cast<std::uint32_t>(c)) + ", base = " +
+	                            std::to_string(Base)};
 }
 
 template <typename Integer, unsigned Base, typename Char>
@@ -86,8 +87,9 @@ Integer to_digit(Char c, std::true_type) {
 	if (c0 <= c and c <= cm) {
 		return static_cast<Integer>(c - c0);
 	}
-	throw invalid_input_failure{std::string{"bad digit: "} + c + ", base = " +
-	                                std::to_string(Base)};
+	throw invalid_input_failure{std::string{"bad digit: "} +
+	                            std::to_string(static_cast<std::uint32_t>(c)) + ", base = " +
+	                            std::to_string(Base)};
 }
 
 template <typename Integer, unsigned Base, typename Char>
