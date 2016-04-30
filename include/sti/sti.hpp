@@ -165,7 +165,7 @@ Integer s_to_integer(Iterator first, Iterator last, std::false_type /*unsigned*/
 		const auto digit = to_digit<Integer, Base>(*first);
 		++first;
 		if (max / Base < res or max - digit < (res *= Integer{Base})) {
-			throw out_of_bounds_failure{"integer to big (2)"};
+			throw out_of_bounds_failure{"integer to big"};
 		}
 		res += digit;
 	}
