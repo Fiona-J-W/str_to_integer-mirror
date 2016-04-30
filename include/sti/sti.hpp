@@ -130,27 +130,22 @@ Integer s_to_integer(Iterator first, Iterator last, std::true_type /*signed*/) {
 	// we have to use a conditional here
 	if (negative) {
 		while (first != last) {
-			if (min / Integer{Base} > res) {
-				throw out_of_bounds_failure{"integer to small (1)"};
-			}
-			res *= Base;
 			const auto digit = to_digit<Integer, Base>(*first);
 			++first;
-			if (Integer{min + digit} > res) {
-				throw out_of_bounds_failure{"integer to small (2)"};
+			// res is already multiplied in the condition, because GCC
+			// seems to be unable to recognize a semantically identical
+			// multiplicaton later on as something it could remove
+			if (min / Integer{Base} > res or min + digit > (res *= Integer{Base})) {
+				throw out_of_bounds_failure{"integer to small"};
 			}
 			res -= digit;
 		}
 	} else { // positive
 		while (first != last) {
-			if (max / Integer{Base} < res) {
-				throw out_of_bounds_failure{"integer to big (1)"};
-			}
-			res *= Base;
 			const auto digit = to_digit<Integer, Base>(*first);
 			++first;
-			if (Integer{max - digit} < res) {
-				throw out_of_bounds_failure{"integer to big (2)"};
+			if (max / Integer{Base} < res or max - digit < (res *= Integer{Base})) {
+				throw out_of_bounds_failure{"integer to big"};
 			}
 			res += digit;
 		}
@@ -160,25 +155,22 @@ Integer s_to_integer(Iterator first, Iterator last, std::true_type /*signed*/) {
 
 template <typename Integer, unsigned Base, typename Iterator>
 Integer s_to_integer(Iterator first, Iterator last, std::false_type /*unsigned*/) {
-	if (read_sign(first)) {
-		throw out_of_bounds_failure{"unsigned integers cannot be negative"};
-	}
+	const auto negative = read_sign(first);
 	if (first == last) {
 		throw invalid_input_failure{"no digits"};
 	}
 	constexpr const auto max = std::numeric_limits<Integer>::max();
 	auto res = Integer{};
 	while (first != last) {
-		if (max / Base < res) {
-			throw out_of_bounds_failure{"integer to big (1)"};
-		}
-		res *= Base;
 		const auto digit = to_digit<Integer, Base>(*first);
 		++first;
-		if (max - digit < res) {
+		if (max / Base < res or max - digit < (res *= Integer{Base})) {
 			throw out_of_bounds_failure{"integer to big (2)"};
 		}
 		res += digit;
+	}
+	if (negative and res != Integer{0}) {
+		throw out_of_bounds_failure{"unsigned integers cannot hold negative values"};
 	}
 	return res;
 }
