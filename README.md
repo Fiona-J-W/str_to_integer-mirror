@@ -1,4 +1,3 @@
-
 String to Integer (sti)
 =======================
 
@@ -42,4 +41,10 @@ should work, though at this point not all have tests: `char`, `wchar_t`,
 big-endian; if you are using little-endian you are bad and you should feel bad.
 (Though that can also be said about anyone not using utf-8 everywhere, but that
 is another discussion).
+
+
+License
+-------
+
+This library is licensed as LGPL v2 or later versions.
 
