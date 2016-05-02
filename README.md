@@ -6,6 +6,52 @@ In contrast to the stdlib-functions it takes the target-type as a template
 argument and guarantees to always throw an exception if the value cannot
 be represented by it.
 
+Advantages over `std::stoi`
+-------------------------
+
+“Don't reinvent the wheel, use the standard-library.” - Yes, I am aware
+of this dogma and in fact I'm preaching it myself. This library is however
+not a case of not-invented-here-syndrom but an answer to the lack of such
+functionality in the standard-library. Yes, I am aware of functions like
+`std::stoi`, `std::atoi` and `std::strtoi`: They are what motivated me
+to write this library because they are fundamentally broken:
+
+* They fail to signal some kinds of errors in a usefull way
+* They are unusable in a generic context.
+* The input decides the base which is very dangerous with leading zeros
+* Their API makes them inefficient
+
+As an example for the first: `std::stoul("-1")` will not result in
+an exception, as it definitely should, but in `static_cast<unsigned long>(-1)`,
+aka the largest value that `unsigned long` can hold.
+
+By unusable in generic contexts I mean things like the following code:
+
+```cpp
+template<typename T>
+T parse_and_double(const std::string& str) {
+	// what am I supposed to put here:
+	return std::stoXXX(str) * 2;
+}
+```
+
+The base-problem is that a string `0023` will be parsed in base 8,
+even though there are perfectly legit reasons to use leading zeros
+in decimal numbers. This behavior cannot really be changed but I really
+don't think that it is necessary for me to point out how this can end
+terrible.
+
+Finally it is shocking how slow `std::stoi` and it's friends are. A
+trivial implementation with fixed base can easily outperform them
+even with complete error-checking and no optimisation. And I am not
+just talking about a few percent here, I am talking about the trivial
+implementation being twice as fast. Note that I am not blaming the
+implementation, for a large part this really is the fault of the overly
+dynamic API. Which is why we should drop the API in favour of one that
+solves all these problems
+
+
+
 Usage
 -----
 
