@@ -117,58 +117,96 @@ bool read_sign(Iterator& it) {
 	return false;
 }
 
+
+template<typename Integer, Integer Base>
+constexpr unsigned safe_rounds_pos() {
+	auto max = std::numeric_limits<Integer>::max();
+	auto i = 0u;
+	while (max >= Base) {
+		max /= Base;
+		++i;
+	}
+	return i;
+}
+template<typename Integer, Integer Base>
+constexpr unsigned safe_rounds_neg() {
+	auto min = std::numeric_limits<Integer>::min();
+	auto i = 0u;
+	while (min <= -Base) {
+		min /= Base;
+		++i;
+	}
+	return i;
+}
+
+template<unsigned Base, typename Integer, typename Iterator>
+inline Integer parse_positive(Integer current, Iterator it, Iterator end, std::integral_constant<unsigned, 0>) {
+	if (it == end) {return current;}
+	constexpr const auto max = std::numeric_limits<Integer>::max();
+	const auto digit = to_digit<Integer, Base>(*it);
+	++it;
+	if (max / Integer{Base} < current or max - digit < (current *= Integer{Base}) or it != end) {
+		throw out_of_bounds_failure{"integer to big"};
+	}
+	current += digit;
+	return current;
+}
+
+template<unsigned Base, typename Integer, unsigned Rounds, typename Iterator>
+inline Integer parse_positive(Integer current, Iterator it, Iterator end, std::integral_constant<unsigned, Rounds>) {
+	if (it == end) {return current;}
+	current *= Base;
+	current += to_digit<Integer, Base>(*it);
+	++it;
+	return parse_positive<Base>(current, it, end, std::integral_constant<unsigned, Rounds - 1>{});
+}
+
+
+template<unsigned Base, typename Integer, typename Iterator>
+inline Integer parse_negative(Integer current, Iterator it, Iterator end, std::integral_constant<unsigned, 0>) {
+	if (it == end) {return current;}
+	constexpr const auto min = std::numeric_limits<Integer>::min();
+	const auto digit = to_digit<Integer, Base>(*it);
+	++it;
+	if (min / Integer{Base} > current or min + digit > (current *= Integer{Base}) or it != end) {
+		throw out_of_bounds_failure{"integer to small"};
+	}
+	current -= digit;
+	return current;
+}
+
+template<unsigned Base, typename Integer, unsigned Rounds, typename Iterator>
+inline Integer parse_negative(Integer current, Iterator it, Iterator end, std::integral_constant<unsigned, Rounds>) {
+	if (it == end) {return current;}
+	current *= Base;
+	current -= to_digit<Integer, Base>(*it);
+	++it;
+	return parse_negative<Base>(current, it, end, std::integral_constant<unsigned, Rounds - 1>{});
+}
+// TODO: parse the maximum number safe of digits without overflow-checks
+
 template <typename Integer, unsigned Base, typename Iterator>
 Integer s_to_integer(Iterator first, Iterator last, std::true_type /*signed*/) {
 	const auto negative = read_sign(first);
 	if (first == last) {
 		throw invalid_input_failure{"no digits"};
 	}
-	auto res = Integer{};
-	constexpr const auto min = std::numeric_limits<Integer>::min();
-	constexpr const auto max = std::numeric_limits<Integer>::max();
-	// "return negative ? -res : res;" doesn't work for min, so
-	// we have to use a conditional here
 	if (negative) {
-		while (first != last) {
-			const auto digit = to_digit<Integer, Base>(*first);
-			++first;
-			// res is already multiplied in the condition, because GCC
-			// seems to be unable to recognize a semantically identical
-			// multiplicaton later on as something it could remove
-			if (min / Integer{Base} > res or min + digit > (res *= Integer{Base})) {
-				throw out_of_bounds_failure{"integer to small"};
-			}
-			res -= digit;
-		}
+		return parse_negative<Base>(Integer{}, first, last,
+				std::integral_constant<unsigned, safe_rounds_neg<Integer, Base>()>{});
 	} else { // positive
-		while (first != last) {
-			const auto digit = to_digit<Integer, Base>(*first);
-			++first;
-			if (max / Integer{Base} < res or max - digit < (res *= Integer{Base})) {
-				throw out_of_bounds_failure{"integer to big"};
-			}
-			res += digit;
-		}
+		return parse_positive<Base>(Integer{}, first, last,
+				std::integral_constant<unsigned, safe_rounds_pos<Integer, Base>()>{});
 	}
-	return res;
 }
-
 template <typename Integer, unsigned Base, typename Iterator>
 Integer s_to_integer(Iterator first, Iterator last, std::false_type /*unsigned*/) {
 	const auto negative = read_sign(first);
 	if (first == last) {
 		throw invalid_input_failure{"no digits"};
 	}
-	constexpr const auto max = std::numeric_limits<Integer>::max();
-	auto res = Integer{};
-	while (first != last) {
-		const auto digit = to_digit<Integer, Base>(*first);
-		++first;
-		if (max / Base < res or max - digit < (res *= Integer{Base})) {
-			throw out_of_bounds_failure{"integer to big"};
-		}
-		res += digit;
-	}
+	const auto res = parse_positive<Base>(Integer{}, first, last,
+			std::integral_constant<unsigned, safe_rounds_pos<Integer, Base>()>{});
 	if (negative and res != Integer{0}) {
 		throw out_of_bounds_failure{"unsigned integers cannot hold negative values"};
 	}
