@@ -112,11 +112,7 @@ Status
 This library is fairly new and hasn't received a code-review yet (if you are
 willing to participate in changing that, contact me). There is a sufficient
 amount of unittests for me to believe that normal use should work. There might
-however be weird behaviour in corner-cases (for instance: if you want to parse
-a negative number that would absolutely be to large too as an unsigned integer,
-the message of the exception claims that the input is to big, but I don't think
-there is a point in changing that).
-
+however be weird behaviour in corner-cases and I am gratefull for bug-reports.
 
 
 License
