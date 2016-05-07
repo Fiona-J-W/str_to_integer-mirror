@@ -30,7 +30,7 @@ By unusable in generic contexts I mean things like the following code:
 ```cpp
 template<typename T>
 T parse_and_double(const std::string& str) {
-	// what am I supposed to put here:
+	// what am I supposed to put here?:
 	return std::stoXXX(str) * 2;
 }
 ```
@@ -45,10 +45,11 @@ Finally it is shocking how slow `std::stoi` and it's friends are. A
 trivial implementation with fixed base can easily outperform them
 even with complete error-checking and no optimisation. And I am not
 just talking about a few percent here, I am talking about the trivial
-implementation being twice as fast. Note that I am not blaming the
+implementation being twice as fast and a slightly less trivial one
+being five times as fast. Note that I am not blaming the
 implementation, for a large part this really is the fault of the overly
 dynamic API. Which is why we should drop the API in favour of one that
-solves all these problems
+solves all these problems, which is what this project attempts.
 
 
 
