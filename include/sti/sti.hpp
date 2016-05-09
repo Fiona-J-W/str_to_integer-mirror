@@ -186,7 +186,6 @@ inline Integer parse_negative(Integer current, Iterator it, Iterator end, std::i
 	++it;
 	return parse_negative<Base>(current, it, end, std::integral_constant<unsigned, Rounds - 1>{});
 }
-// TODO: parse the maximum number safe of digits without overflow-checks
 
 template <typename Integer, unsigned Base, typename Iterator>
 Integer s_to_integer(Iterator first, Iterator last, std::true_type /*signed*/) {
