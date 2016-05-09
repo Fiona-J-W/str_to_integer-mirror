@@ -103,7 +103,10 @@ Integer to_digit(Char c) {
  * points too and returns whether a '-' was swallowed.
  */
 template <typename Iterator>
-bool read_sign(Iterator& it) {
+bool read_sign(Iterator& it, Iterator end) {
+	if (it == end) {
+		return false;
+	}
 	const auto c = *it;
 	using char_type = std::decay_t<decltype(c)>;
 	if (c == char_literals<char_type>::plus) {
@@ -187,7 +190,7 @@ inline Integer parse_negative(Integer current, Iterator it, Iterator end, std::i
 
 template <typename Integer, unsigned Base, typename Iterator>
 Integer s_to_integer(Iterator first, Iterator last, std::true_type /*signed*/) {
-	const auto negative = read_sign(first);
+	const auto negative = read_sign(first, last);
 	if (first == last) {
 		throw invalid_input_failure{"no digits"};
 	}
@@ -201,7 +204,7 @@ Integer s_to_integer(Iterator first, Iterator last, std::true_type /*signed*/) {
 }
 template <typename Integer, unsigned Base, typename Iterator>
 Integer s_to_integer(Iterator first, Iterator last, std::false_type /*unsigned*/) {
-	const auto negative = read_sign(first);
+	const auto negative = read_sign(first, last);
 	if (first == last) {
 		throw invalid_input_failure{"no digits"};
 	}
